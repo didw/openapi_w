@@ -15,14 +15,27 @@ class DailyData:
     def __init__(self):
         self.kiwoom = Kiwoom()
         self.kiwoom.comm_connect()
+        print("success to connect")
         self.wrapper = KiwoomWrapper(self.kiwoom)
-        self.get_code_list()
-        print(self.kospi_codes)
-        print(self.kosdak_codes)
+        print("success to init kiwoomwrapper")
+        self.get_item_list()
+        print("item_list", self.item_list)
+        self.code_list = ['ESZ17']
+
+    def get_item_list(self):
+        """ 해외선물 상품리스트를 반환한다.
+        """
+        self.item_list = self.kiwoom.get_global_future_item_list()
 
     def get_code_list(self):
-        self.kospi_codes = self.kiwoom.get_codelist_by_market(MARKET_KOSPI)
-        self.kosdak_codes = self.kiwoom.get_codelist_by_market(MARKET_KOSDAK)
+        """ 해외상품별 해외옵션 종목코드 리스트를 반환
+        실행시 파이썬 dead
+        """
+        self.code_list = {}
+        for item in self.item_list:
+            time.sleep(1)
+            self.code_list[item] = self.kiwoom.get_global_option_code_list(item)
+            print("code_list[%s]" % item, self.code_list[item])
 
     def check_recent_file(self, code):
         import os
@@ -39,61 +52,20 @@ class DailyData:
     def save_all_data(self):
         today = datetime.date.today().strftime("%Y%m%d")
         #today = datetime.date(2011,9,1).strftime("%Y%m%d")
-        print(today, len(self.kosdak_codes), len(self.kospi_codes))
+        print(today, len(self.code_list))
 
-        # load code list from account
-        DATA = []
-        with open('../data/stocks_in_account.txt', encoding='utf-8') as f_stocks:
-            deposit = int(f_stocks.readline().strip().replace(',',''))
-            for line in f_stocks.readlines():
-                data = line.split(',')
-                DATA.append([data[6].replace('A', ''), data[1], data[0]])
-        for idx, code in enumerate(DATA):
+        # save data
+        for code in self.code_list:
             if code == '':
                 continue
             print("get data of %s" % code)
-            if self.check_recent_file(code[0]): continue
-            self.save_table(code[0], today)
+            self.save_table(code)
 
-        for code in self.kospi_codes:
-            if code == '':
-                continue
-            print("get data of %s" % code)
-            if self.check_recent_file(code): continue
-            self.save_table(code, today)
-        for code in self.kosdak_codes:
-            if code == '':
-                continue
-            print("get data of %s" % code)
-            if self.check_recent_file(code): continue
-            self.save_table(code, today)
-
-    def save_table(self, code, date):
+    def save_table(self, code):
         TR_REQ_TIME_INTERVAL = 4
         time.sleep(TR_REQ_TIME_INTERVAL)
-        data_81 = self.wrapper.get_data_opt10081(code, date)
-        time.sleep(TR_REQ_TIME_INTERVAL)
-        data_86 = self.wrapper.get_data_opt10086(code, date)
-        col_86 = ['전일비', '등락률', '금액(백만)', '신용비', '개인', '기관', '외인수량', '외국계', '프로그램',
-                  '외인비', '체결강도', '외인보유', '외인비중', '외인순매수', '기관순매수', '개인순매수', '신용잔고율']
-        data = pd.concat([data_81, data_86.loc[:, col_86]], axis=1)
-        #con = sqlite3.connect("../data/stock.db")
-        try:
-            data = data.loc[data.index > int(self.kiwoom.start_date.strftime("%Y%m%d"))]
-            #orig_data = pd.read_sql("SELECT * FROM '%s'" % code, con, index_col='일자').sort_index()
-            orig_data = pd.read_hdf("../data/hdf/%s.hdf" % code, 'day').sort_index()
-            end_date = orig_data.index[-1]
-            orig_data = orig_data.loc[orig_data.index < end_date]
-            data = data.loc[data.index >= end_date]
-            data = pd.concat([orig_data, data], axis=0)
-        except (FileNotFoundError, IndexError) as e:
-            print(e)
-            pass
-        finally:
-            data.index.name = '일자'
-            if len(data) != 0:
-                #data.to_sql(code, con, if_exists='replace')
-                data.to_hdf('../data/hdf/%s.hdf'%code, 'day', mode='w')
+        data_01 = self.wrapper.get_data_opc10001(code)
+        print(data_01)
 
 
 if __name__ == '__main__':
@@ -102,10 +74,3 @@ if __name__ == '__main__':
     daily_data = DailyData()
     
     daily_data.save_all_data()
-
-    import glob
-    import zipfile
-    filelist = glob.glob('../data/hdf/*.hdf')
-    with zipfile.ZipFile('../data/hdf.zip', 'w', zipfile.ZIP_DEFLATED) as myzip:
-        for f in filelist:
-            myzip.write(f)

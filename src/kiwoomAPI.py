@@ -1,7 +1,7 @@
 #-*-coding: utf-8 -*-
 import os, json, logging
 from collections import defaultdict
-from PyQt5.QtCore import QObject
+from PyQt5.QtCore import QObject, QEventLoop
 from PyQt5.QAxContainer import QAxWidget
 
 
@@ -133,7 +133,10 @@ class KiwoomAPI(QObject):
 
     def CommConnect(self, *args):
         """로그인 윈도우를 실행한다."""
-        return self.ocx.dynamicCall("CommConnect(int)", *args)
+        res = self.ocx.dynamicCall("CommConnect(int)", *args)
+        login_loop = QEventLoop()
+        login_loop.exec_()
+        return res
 
     def GetGlobalOptionMonthByItem(self, *args):
         """해외옵션 월물리스트를 상품별로 반환한다."""
