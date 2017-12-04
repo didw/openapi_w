@@ -5,9 +5,10 @@ from PyQt5.QtCore import *
 import pandas as pd
 import time, datetime
 import os
+import pyautogui
 from tqdm import tqdm
 
-TR_REQ_TIME_INTERVAL = 0.25
+TR_REQ_TIME_INTERVAL = 0.2
 
 class Kiwoom(QAxWidget):
     def __init__(self):
@@ -24,7 +25,11 @@ class Kiwoom(QAxWidget):
         self.OnReceiveTrData.connect(self._receive_tr_data)
 
     def comm_connect(self):
+        with open("account.txt", 'r') as f:
+            account = f.readlines()
         self.dynamicCall("CommConnect(1)")
+        time.sleep(5)
+        pyautogui.typewrite("%s\n"%account[1], interval=1)
         self.login_event_loop = QEventLoop()
         self.login_event_loop.exec_()
 
@@ -179,6 +184,10 @@ def main():
         today = datetime.datetime.now()
         print(today)
         time.sleep(10)
+        now = time.localtime()
+        cur_time = int("%02d%02d" % (now.tm_hour, now.tm_min))
+        if 705 < cur_time < 730:
+            break
 
 
 
