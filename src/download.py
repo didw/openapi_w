@@ -28,8 +28,8 @@ class Kiwoom(QAxWidget):
         with open("account.txt", 'r') as f:
             account = f.readlines()
         self.dynamicCall("CommConnect(1)")
-        time.sleep(5)
-        pyautogui.typewrite("%s\n"%account[1], interval=1)
+        time.sleep(10)
+        pyautogui.typewrite("%s\n"%account[1], interval=0.1)
         self.login_event_loop = QEventLoop()
         self.login_event_loop.exec_()
 
@@ -38,6 +38,8 @@ class Kiwoom(QAxWidget):
             print("connected")
         else:
             print("disconnected")
+            time.sleep(5)
+            self.comm_connect()
 
         self.login_event_loop.exit()
 
@@ -174,20 +176,29 @@ def main():
             'OESZ17P2650','OEW2Z17C2625','OEW2Z17C2630','OEW2Z17C2640','OEW2Z17C2650','OEW2Z17P2600','OEW3F18C2675','OEW3F18C2700','OEW3F18P2500','OZCF18C0360',
             'OZCH18C0350','OZCH18C0360','OZCH18C0370','OZCH18P0340','OZCH18P0350','OZCN18C0370']
 
-        df_summary = []
-        progress = "."
-        for code in tqdm(future_code_list):
-            download_add(code, kiwoom)
-        for code in tqdm(option_code_list):
-            download_add(code, kiwoom)
+        print("AutoRes is starting")
+        executable = sys.executable
+        args = sys.argv[:]
+        args.insert(0, sys.executable)
 
-        today = datetime.datetime.now()
-        print(today)
-        time.sleep(10)
-        now = time.localtime()
-        cur_time = int("%02d%02d" % (now.tm_hour, now.tm_min))
-        if 705 < cur_time < 730:
-            break
+        try:
+            for code in tqdm(future_code_list):
+                download_add(code, kiwoom)
+            for code in tqdm(option_code_list):
+                download_add(code, kiwoom)
+
+            today = datetime.datetime.now()
+            print(today)
+            time.sleep(10)
+            now = time.localtime()
+            cur_time = int("%02d%02d" % (now.tm_hour, now.tm_min))
+            if 543 < cur_time < 555 or 718 < cur_time < 725:
+                break
+        except:
+            time.sleep(1)
+            print("Respawning")
+            os.execvp(executable, args)
+
 
 
 
