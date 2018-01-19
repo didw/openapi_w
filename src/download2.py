@@ -101,19 +101,19 @@ class Kiwoom(QAxWidget):
 
 def concatenate_data(code, df):
     if len(code)<8:
-        fname = '../Data/future/%s.csv'%code
+        fname = '../Data/future/%s.hdf'%code
     else:
-        fname = '../Data/option/%s.csv'%code
+        fname = '../Data/option/%s.hdf'%code
     if not os.path.exists(fname):
         df = df.sort_values(by=['체결시간'])
-        df.to_csv(fname, encoding='UTF-8', index=False)
+        df.to_hdf(fname, 'table')
         return
 
-    df_old = pd.read_csv(fname, encoding='UTF-8')
+    df_old = pd.read_hdf(fname, 'table')
     df_old = df_old.sort_values(by=['체결시간'])
     if len(df_old) == 0:
         df = df.sort_values(by=['체결시간'])
-        df.to_csv(fname, encoding='UTF-8', index=False)
+        df.to_hdf(fname, 'table')
         return
         
     last_date = int(df_old.loc[len(df_old)-1,'체결시간'])
@@ -123,7 +123,7 @@ def concatenate_data(code, df):
 
     df_new = pd.concat([df_old, df])
     df_new = df_new.sort_values(by=['체결시간'])
-    df_new.to_csv(fname, encoding='UTF-8', index=False)
+    df_new.to_hdf(fname, 'table')
 
 
 def download_add(code, kiwoom):
