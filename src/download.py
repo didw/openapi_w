@@ -94,7 +94,7 @@ class Kiwoom(QAxWidget):
             try:
                 self.received_data.append([int(datetime), float(close), float(volume), int(workingday)])
             except ValueError:
-                print(datetime, close, volume, workingday)
+                print("\n")
                 break
 
 
@@ -122,12 +122,12 @@ def concatenate_data(code, df):
 def download_add(code, kiwoom):
     # opt10081 TR 요청
     #print("download %s" % code)
+    print(" C: %s  "%code, end='')
     kiwoom.received_data = []
     time.sleep(TR_REQ_TIME_INTERVAL)
     kiwoom.set_input_value("종목코드", code)
     kiwoom.set_input_value("시간단위", 1)
     kiwoom.comm_rq_data("opc10001_req", "opc10001", 0, "0101")
-
     while kiwoom.remained_data == True:
         time.sleep(TR_REQ_TIME_INTERVAL)
         kiwoom.set_input_value("종목코드", code)
@@ -136,12 +136,37 @@ def download_add(code, kiwoom):
     df = pd.DataFrame(kiwoom.received_data, columns=["체결시간", "현재가", "거래량", "영업일자"])
     concatenate_data(code, df)
 
+def GetGlobalFutureItemlist(kiwoom):
+    time.sleep(TR_REQ_TIME_INTERVAL)
+    itemlist = kiwoom.GetGlobalFutureItemlist()
+    print(itemlist)
+    return itemlist.split(';')
+
+def GetGlobalFutureCodelist(kiwoom, item):
+    time.sleep(TR_REQ_TIME_INTERVAL)
+    codelist = kiwoom.GetGlobalFutureCodelist(item)
+    print(item, len(codelist.split(';')))
+    return codelist.split(';')
+
+def GetGlobalOptionItemlist(kiwoom):
+    time.sleep(TR_REQ_TIME_INTERVAL)
+    itemlist = kiwoom.GetGlobalOptionItemlist()
+    print(itemlist)
+    return itemlist.split(';')
+
+def GetGlobalOptionCodelist(kiwoom, item):
+    time.sleep(TR_REQ_TIME_INTERVAL)
+    codelist = kiwoom.GetGlobalOptionCodelist(item)
+    print(item, len(codelist.split(';')))
+    return codelist.split(';')
+
 
 def main():
     app = QApplication(sys.argv)
     kiwoom = Kiwoom()
     kiwoom.comm_connect()
 
+    item_list = ['6E', '6J', '6A', '6C', '6B', '6N', 'HE', 'LE', 'ZS', 'GC', 'HG', 'ES', 'SP', 'NQ', 'CL', ]
     while True:        
         future_code_list = ['6AH18','6AZ17','6BH18','6BZ17','6CH18','6CZ17','6EF18','6EG18','6EH18','6EZ17','6JH18','6JZ17','6LF18',
             '6MZ17','6NH18','6NZ17','6SZ17','BZG18','BZH18','CLF18','CLG18','CLH18','CLJ18','CLK18','CLM18','CLM19','CLN18',
@@ -152,16 +177,15 @@ def main():
             'HGF18','HGH18','HGK18','HGN18','HGZ17','HHIH18','HHIM18','HHIZ17','HOF18','HOG18','HOH18','HOJ18','HOK18','HOM18','HOZ18',
             'HSIH18','HSIM18','HSIZ17','INZ17','IUF18','IUZ17','LEG18','LEJ18','LEM18','LEQ18','LEV18','LEZ17','LEZ18','M6AZ17','M6BZ17',
             'M6EH18','M6EZ17','MCDZ17','MCHH18','MCHZ17','MGCG18','MGCZ17','MGCZ18','MHIF18','MHIH18','MHIM18','MHIZ17','MJYZ17','NGF18',
-            'NGF19','NGG18','NGH18','NGH19','NGJ18','NGJ19','NGK18','NGM18','NGN18','NGQ18','NGU18','NGV18','NGX18','NGZ18','NKDH18','NKDZ17',
-            'NKH18','NKZ17','NQH18','NQZ17','PAH18','PAZ17','PLF18','PLJ18','QGF18','QMF18','QMG18','QOG18','RBF18','RBG18','RBH18','RBJ18',
+            'NGF19','NGG18','NGH18','NGH19','NGJ18','NGJ19','NGK18','NGM18','NGN18','NGQ18','NGU18','NGV18','NGX18','NGZ18','NKDH18',
+            'NKH18','NQH18','NQZ17','PAH18','PAZ17','PLF18','PLJ18','QGF18','QMF18','QMG18','QOG18','RBF18','RBG18','RBH18','RBJ18',
             'RBK18','RBM18','RBN18','RBZ18','RS1Z17','RSGZ17','RSVZ17','SIF18','SIH18','SIK18','SIZ17','TWZ17','UCF18','UCH18','UCM18',
             'UCZ17','YMH18','YMZ17','ZBH18','ZBZ17','ZCH18','ZCH19','ZCK18','ZCN18','ZCU18','ZCZ17','ZCZ18','ZFH18','ZFZ17','ZLF18','ZLH18',
             'ZLK18','ZLN18','ZLQ18','ZLV18','ZLZ17','ZLZ18','ZMF18','ZMH18','ZMK18','ZMN18','ZMQ18','ZMV18','ZMZ17','ZMZ18','ZNH18','ZNZ17',
             'ZOH18','ZOZ17','ZRF18','ZSF18','ZSH18','ZSK18','ZSN18','ZSQ18','ZSX18','ZTH18','ZTZ17','ZWH18','ZWK18','ZWN18','ZWU18','ZWZ17','ZWZ18']
 
-        option_code_list = ['O6BZ17C1335','O6BZ17C1340','O6BZ17C1345','O6BZ17C1350','O6BZ17P1330','O6EF18C1200','O6EF18C1205','O6EF18C1210','O6EF18C1215',
-            'O6EZ17C1180','O6EZ17C1185','O6EZ17C1190','O6EZ17C1195','O6EZ17C1200','O6EZ17C1205','O6EZ17P1170','O6EZ17P1175','O6EZ17P1180','O6EZ17P1185',
-            'O6EZ17P1190','O6JZ17C0900','O6JZ17P0885','OCLF18C5700','OCLF18C5750','OCLF18C5800','OCLF18C5850','OCLF18C5900','OCLF18C5950','OCLF18C6000',
+        option_code_list = ['O6EF18C1200','O6EF18C1205','O6EF18C1210','O6EF18C1215',
+            'OCLF18C5700','OCLF18C5750','OCLF18C5800','OCLF18C5850','OCLF18C5900','OCLF18C5950','OCLF18C6000',
             'OCLF18C6050','OCLF18C6100','OCLF18C6150','OCLF18C6200','OCLF18C6250','OCLF18C6300','OCLF18C6350','OCLF18C6400','OCLF18P4850','OCLF18P4900',
             'OCLF18P4950','OCLF18P5000','OCLF18P5050','OCLF18P5100','OCLF18P5150','OCLF18P5200','OCLF18P5250','OCLF18P5300','OCLF18P5350','OCLF18P5400',
             'OCLF18P5450','OCLF18P5500','OCLF18P5550','OCLF18P5600','OCLF18P5650','OCLF18P5700','OCLF18P5750','OCLF18P5800','OCLG18C5800','OCLG18C5850',
@@ -173,18 +197,18 @@ def main():
             'OESZ17P2300','OESZ17P2400','OESZ17P2450','OESZ17P2475','OESZ17P2490','OESZ17P2500','OESZ17P2520','OESZ17P2525','OESZ17P2530','OESZ17P2535',
             'OESZ17P2540','OESZ17P2545','OESZ17P2550','OESZ17P2555','OESZ17P2560','OESZ17P2565','OESZ17P2570','OESZ17P2575','OESZ17P2580','OESZ17P2585',
             'OESZ17P2590','OESZ17P2595','OESZ17P2600','OESZ17P2605','OESZ17P2610','OESZ17P2615','OESZ17P2620','OESZ17P2625','OESZ17P2630','OESZ17P2640',
-            'OESZ17P2650','OEW2Z17C2625','OEW2Z17C2630','OEW2Z17C2640','OEW2Z17C2650','OEW2Z17P2600','OEW3F18C2675','OEW3F18C2700','OEW3F18P2500','OZCF18C0360',
+            'OESZ17P2650','OEW3F18C2675','OEW3F18C2700','OEW3F18P2500','OZCF18C0360',
             'OZCH18C0350','OZCH18C0360','OZCH18C0370','OZCH18P0340','OZCH18P0350','OZCN18C0370']
 
         print("AutoRes is starting")
         executable = sys.executable
         args = sys.argv[:]
         args.insert(0, sys.executable)
-
+        
         try:
-            for code in tqdm(future_code_list):
+            for code in tqdm(future_code_list, ncols=80):
                 download_add(code, kiwoom)
-            for code in tqdm(option_code_list):
+            for code in tqdm(option_code_list, ncols=80):
                 download_add(code, kiwoom)
 
             today = datetime.datetime.now()
